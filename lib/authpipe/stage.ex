@@ -17,6 +17,8 @@ defmodule AuthPipe.Stage do
   # account management
   @callback setup_account(account_info :: map, opts:: keyword) :: any
   @callback lock_account(account_info :: map, opts:: keyword) :: any
+  @callback unlock_account(account_info :: map, opts:: keyword) :: any
+  @callback reset_account(account_info :: map, opts:: keyword) :: any
   @callback remove_account(account_info :: map, opts:: keyword) :: any
 
   defmacro __using__(_args) do
@@ -27,6 +29,8 @@ defmodule AuthPipe.Stage do
       def authenticated(_auth_state, _opts), do: :ok
       def setup_account(account_info, _opts), do: account_info
       def lock_account(account_info, _opts), do: account_info
+      def unlock_account(account_info, _opts), do: account_info
+      def reset_account(account_info, _opts), do: account_info
       def remove_account(account_info, _opts), do: account_info
 
       defoverridable [approve_spec?: 2,
