@@ -19,34 +19,11 @@ defmodule AuthPipe do
 
   defmacro __before_compile__(env) do
     # collect all the stages that have been defined and which exist
-    stages = Enum.reduce(Module.get_attribute(env.module, :auth_stages, []), [],
-                         fn {stage, opts}, acc ->
-                           as_string = Atom.to_string(stage)
-                           # convert some_stage_name to SomeStageName
-                           reduce_fun = fn component, acc -> acc <> String.capitalize(component) end
-                           name = Enum.reduce(String.split(as_string, "_"), "", reduce_fun)
-                           # prepend the common AuthPipe.Stage prefix
-                           module = Module.concat([:"AuthPipe.Stage", name])
-                           # then check it is actually loaded ...
-                           if Code.ensure_loaded?(module) do
-                             # ... before finally adding it to the pipeline
-                             [{stage, module, opts}|acc]
-                           else
-                             Logger.warn "Requested stage #{module} not available!"
-                             acc
-                           end
-                         end)
+    stages = Module.get_attribute(env.module, :auth_stages, [])
+    stages = Enum.reduce(stages, [], &AuthPipe.canonicalize_stage/2)
 
     # memoize the stages that are requred to be supported by the client
-    required_stages = Enum.reduce(stages, [],
-                                  fn {stage, _module, opts}, acc ->
-                                    with true <- Keyword.get(opts, :required, true),
-                                         false <- Keyword.get(opts, :implicit, false) do
-                                      [Atom.to_string(stage)|acc]
-                                    else
-                                      _ -> acc
-                                    end
-                                  end)
+    required_stages = Enum.reduce(stages, [], &AuthPipe.filter_required/2)
 
     #Logger.debug "Stages: #{inspect stages}, required: #{inspect required_stages}"
 
@@ -64,8 +41,7 @@ defmodule AuthPipe do
 
       defp __authpipe_approve_initialization_with(client_supports, client_data) do
         Enum.all?(unquote(required_stages),
-                  fn stage -> Enum.member?(client_supports, stage) end)
-        &&
+                  fn stage -> Enum.member?(client_supports, stage) end) &&
         Enum.all?(unquote(Macro.escape(stages)),
                   fn {_name, module, opts} -> module.approve_spec?(client_data, opts) end)
       end
@@ -74,7 +50,8 @@ defmodule AuthPipe do
         {:authorized, state}
       end
 
-      defp __authpipe_do_next_stage(%{"data" => auth_data} = client_data, %{stages: [{_stage_name, module, opts}|next_stages]} = state) do
+      defp __authpipe_do_next_stage(%{"data" => auth_data} = client_data,
+                                    %{stages: [{_stage_name, module, opts}|next_stages]} = state) do
         case module.process(auth_data, state, opts) do
           {:next, state} -> __authpipe_do_next_stage(client_data, %{state| stages: next_stages})
           resp -> authenticate(client_data, resp)
@@ -125,6 +102,35 @@ defmodule AuthPipe do
   defmacro auth_stage(stage, opts \\ []) do
     quote do
       @auth_stages {unquote(stage), unquote(opts)}
+    end
+  end
+
+  def canonicalize_stage({stage, opts}, acc) do
+    as_string = Atom.to_string(stage)
+
+    # convert some_stage_name to SomeStageName
+    reduce_fun = fn component, acc -> acc <> String.capitalize(component) end
+    name = Enum.reduce(String.split(as_string, "_"), "", reduce_fun)
+
+    # prepend the common AuthPipe.Stage prefix
+    module = Module.concat([:"AuthPipe.Stage", name])
+
+    # then check it is actually loaded ...
+    if Code.ensure_loaded?(module) do
+      # ... before finally adding it to the pipeline
+      [{stage, module, opts}|acc]
+    else
+      Logger.warn "Requested stage #{module} not available!"
+      acc
+    end
+  end
+
+  def filter_required({stage, _module, opts}, acc) do
+    with true <- Keyword.get(opts, :required, true),
+         false <- Keyword.get(opts, :implicit, false) do
+      [Atom.to_string(stage)|acc]
+    else
+      _ -> acc
     end
   end
 end
