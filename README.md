@@ -23,31 +23,31 @@ SQL to LDAP can be a simple matter of changing up your authentication pipeline.
 AuthPipe is heavily inspired by Plug, and as such uses a similar syntax for defining
 authentication pipelines. For example:
 
-  defmodule AuthDef do
-    use AuthPipe
+    defmodule AuthDef do
+      use AuthPipe
 
-    auth_stage :session_token, required: false
-    auth_stage :password, implicit: true
-    auth_stage :captcha
-  end
+      auth_stage :session_token, required: false
+      auth_stage :password, implicit: true
+      auth_stage :captcha
+    end
 
 The above module defines an authentication pipeline that includes checking
 for session tokens, passwords, and captchas. By defalt all stages of a pipeline
 are required, and the client is responsible for starting the authentication
 session with an init data block that advertises what it is capable of supporting:
 
-  {
-    "data": {
-      "user": "jane.doe",
-        "password": "password"
-    },
-      "init": {
-        "v": 1,
-        "methods": [
-           "captcha"
-        ]
+    {
+      "data": {
+        "user": "jane.doe",
+          "password": "password"
+      },
+        "init": {
+          "v": 1,
+          "methods": [
+             "captcha"
+          ]
+      }
     }
-  }
 
 In the AuthDef exampleabove , session tokens are not required and password checking
 is implied which means that the client does not need to advertise special support
