@@ -37,6 +37,7 @@ defmodule AuthPipe.Stage do
                       authenticated: 2,
                       setup_account: 2,
                       lock_account: 2,
+                      unlock_account: 2,
                       remove_account: 2]
     end
   end
