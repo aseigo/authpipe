@@ -24,7 +24,7 @@ defmodule AuthPipe.Stage.EctoPassword do
             select: auth.password
 
     case repo.one(query) do
-      nil -> {:fail, :no_such_user}
+      nil -> {:fail, :no_such_user, auth_state}
       hashed_password -> password_matches?(Comeonin.Bcrypt.checkpw(password, hashed_password),
                                              auth_state)
     end
