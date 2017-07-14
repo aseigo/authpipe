@@ -49,8 +49,29 @@ defmodule AuthPipe.Stage.EctoPassword do
     |> repo.insert!(on_conflict: :replace_all, conflict_target: :user)
   end
 
-  def lock_account(_account_info, _opts), do: :ok
-  def remove_account(_account_info, _opts), do: :ok
+  def lock_account(account_info, opts) do 
+    account_info
+    |> Map.put("active", false)
+    |> setup_account(opts)
+  end
+
+  def unlock_account(account_info, opts) do
+    account_info
+    |> Map.put("active", true)
+    |> setup_account(opts)
+  end
+
+  def remove_account(account_info, %{repo: repo}) do
+    try do
+      %AuthPipe.Stage.EctoPassword.Schema{}
+      |> cast(account_info, [:user])
+      |> apply_changes
+      |> repo.delete
+      :ok
+    rescue
+      Ecto.StaleEntryError -> :ok
+    end
+  end
 
   defp password_matches?(true, auth_state), do: {:next, auth_state}
   defp password_matches?(_, auth_state), do: {:fail, :password_incorrect, auth_state}
