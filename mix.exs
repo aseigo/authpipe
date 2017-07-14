@@ -23,7 +23,14 @@ defmodule Authpipe.Mixfile do
 
   defp deps do
     [
+      # core deps
       {:poison, "~> 3.1.0"},
+
+      # stage deps
+      {:ecto, "~> 2.1.4"},
+      {:comeonin, "~>2.1.0"},
+
+      # development deps
       {:remix, "~> 0.0.2", only: :dev},
       {:credo, "~> 0.8.1", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:test], runtime: false},
