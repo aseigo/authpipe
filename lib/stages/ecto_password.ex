@@ -39,9 +39,9 @@ defmodule AuthPipe.Stage.EctoPassword do
     # TODO: password rules? e.g. min size, ...
     # TODO: in case of a new account and no password .. ?
     account_info = 
-    case Map.get account_info, :password do
+    case Map.get account_info, "password" do
       nil -> account_info
-      value -> Map.put account_info, :password, Comeonin.Bcrypt.hashpwsalt value
+      value -> Map.put account_info, "password", Comeonin.Bcrypt.hashpwsalt value
     end
 
     %AuthPipe.Stage.EctoPassword.Schema{}
