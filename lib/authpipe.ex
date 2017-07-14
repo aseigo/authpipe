@@ -25,7 +25,7 @@ defmodule AuthPipe do
     # memoize the stages that are requred to be supported by the client
     required_stages = Enum.reduce(stages, [], &AuthPipe.filter_required/2)
 
-    #Logger.debug "Stages: #{inspect stages}, required: #{inspect required_stages}"
+    Logger.debug "Stages: #{inspect stages}, required: #{inspect required_stages}"
 
     quote do
       def sigil_l(string, _), do: string
@@ -118,19 +118,13 @@ defmodule AuthPipe do
     # then check it is actually loaded ...
     if Code.ensure_loaded?(module) do
       # ... before finally adding it to the pipeline
-      [{stage, module, opts}|acc]
+      [{stage, module, Enum.into(opts, %{})}|acc]
     else
       Logger.warn "Requested stage #{module} not available!"
       acc
     end
   end
 
-  def filter_required({stage, _module, opts}, acc) do
-    with true <- Keyword.get(opts, :required, true),
-         false <- Keyword.get(opts, :implicit, false) do
-      [Atom.to_string(stage)|acc]
-    else
-      _ -> acc
-    end
-  end
+  def filter_required({stage, _module, %{required: true, implicit: false}}, acc), do: [Atom.to_string(stage)|acc]
+  def filter_required(_, acc), do: acc
 end
