@@ -1,4 +1,4 @@
-defmodule Mix.Tasks.AuthPipe.GenEctoPasswordMigration do
+defmodule Mix.Tasks.Authpipe.GenEctoPasswordMigration do
   use Mix.Task
 
   @shortdoc "Creates the migration needed by the EctoPassword AuthPipe stage"
@@ -11,7 +11,7 @@ defmodule Mix.Tasks.AuthPipe.GenEctoPasswordMigration do
   @doc false
   def run(args) do
     if Mix.Project.umbrella? do
-      Mix.raise "mix authpipe.genectopasswordmigration can only be run inside an application directory"
+      Mix.raise "mix authpipe.gen_ecto_password_migration can only be run inside an application directory"
     end
 
     {_opts, [repo], []} = OptionParser.parse(args)
@@ -20,7 +20,7 @@ defmodule Mix.Tasks.AuthPipe.GenEctoPasswordMigration do
     target = "priv/repo/migrations/#{timestamp()}_init_authpipe_ectopassword.exs"
     binding = [repo: repo]
     Mix.Generator.create_file(target, EEx.eval_file(source, binding))
-    IO.puts "Don't forget to run `mix ectol.migrate!`"
+    IO.puts "Don't forget to run `mix ecto.migrate!`"
   end
 
   defp timestamp do
