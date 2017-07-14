@@ -16,7 +16,6 @@ defmodule AuthPipe.Stage.EctoPassword do
   import Ecto.Changeset
 
   @password_table_name "authpipe_stage_ectopassword"
-  @default_pw_length 32
 
   def process(%{"user" => user, "password" => password}, auth_state, %{repo: repo}) do
     query = from auth in @password_table_name,
