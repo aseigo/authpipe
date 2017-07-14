@@ -3,7 +3,7 @@ defmodule AuthPipe.Stage.EctoPassword.Schema do
 
   @primary_key false
   schema "authpipe_stage_ectopassword" do
-    field :user, :string
+    field :user, :string, primary_key: true
     field :password, :string
     field :active, :boolean, default: false
   end
