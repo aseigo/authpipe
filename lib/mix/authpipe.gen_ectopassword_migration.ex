@@ -1,6 +1,8 @@
 defmodule Mix.Tasks.Authpipe.GenEctoPasswordMigration do
   use Mix.Task
 
+  alias Mix.{Project, Generator}
+
   @shortdoc "Creates the migration needed by the EctoPassword AuthPipe stage"
 
   @moduledoc """
@@ -10,7 +12,7 @@ defmodule Mix.Tasks.Authpipe.GenEctoPasswordMigration do
 
   @doc false
   def run(args) do
-    if Mix.Project.umbrella? do
+    if Project.umbrella? do
       Mix.raise "mix authpipe.gen_ecto_password_migration can only be run inside an application directory"
     end
 
@@ -19,7 +21,7 @@ defmodule Mix.Tasks.Authpipe.GenEctoPasswordMigration do
     source = Application.app_dir :authpipe, "priv/migrations/ectopassword.exs"
     target = "priv/repo/migrations/#{timestamp()}_init_authpipe_ectopassword.exs"
     binding = [repo: repo]
-    Mix.Generator.create_file(target, EEx.eval_file(source, binding))
+    Generator.create_file(target, EEx.eval_file(source, binding))
     IO.puts "Don't forget to run `mix ecto.migrate!`"
   end
 

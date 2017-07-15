@@ -15,6 +15,8 @@ defmodule AuthPipe.Stage.EctoPassword do
   import Ecto.Query, only: [from: 2]
   import Ecto.Changeset
 
+  alias Comeonin.Bcrypt
+
   @password_table_name "authpipe_stage_ectopassword"
 
   def process(%{"user" => user, "password" => password}, auth_state, %{repo: repo}) do
@@ -25,7 +27,7 @@ defmodule AuthPipe.Stage.EctoPassword do
 
     case repo.one(query) do
       nil -> {:fail, :no_such_user, auth_state}
-      hashed_password -> password_matches?(Comeonin.Bcrypt.checkpw(password, hashed_password),
+      hashed_password -> password_matches?(Bcrypt.checkpw(password, hashed_password),
                                              auth_state)
     end
   end
@@ -38,10 +40,10 @@ defmodule AuthPipe.Stage.EctoPassword do
   def setup_account(account_info, %{repo: repo}) do
     # TODO: password rules? e.g. min size, ...
     # TODO: in case of a new account and no password .. ?
-    account_info = 
+    account_info =
     case Map.get account_info, "password" do
       nil -> account_info
-      value -> Map.put account_info, "password", Comeonin.Bcrypt.hashpwsalt value
+      value -> Map.put account_info, "password", Bcrypt.hashpwsalt value
     end
 
     %AuthPipe.Stage.EctoPassword.Schema{}
@@ -49,7 +51,7 @@ defmodule AuthPipe.Stage.EctoPassword do
     |> repo.insert!(on_conflict: :replace_all, conflict_target: :user)
   end
 
-  def lock_account(account_info, opts) do 
+  def lock_account(account_info, opts) do
     account_info
     |> Map.put("active", false)
     |> setup_account(opts)
@@ -62,15 +64,13 @@ defmodule AuthPipe.Stage.EctoPassword do
   end
 
   def remove_account(account_info, %{repo: repo}) do
-    try do
-      %AuthPipe.Stage.EctoPassword.Schema{}
-      |> cast(account_info, [:user])
-      |> apply_changes
-      |> repo.delete
-      :ok
-    rescue
-      Ecto.StaleEntryError -> :ok
-    end
+    %AuthPipe.Stage.EctoPassword.Schema{}
+    |> cast(account_info, [:user])
+    |> apply_changes
+    |> repo.delete
+    :ok
+  rescue
+    Ecto.StaleEntryError -> :ok
   end
 
   defp password_matches?(true, auth_state), do: {:next, auth_state}
