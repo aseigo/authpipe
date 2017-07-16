@@ -16,7 +16,7 @@ end
 
 defmodule AuthPipe.Stage.TestPassword do
   use AuthPipe.Stage
-  
+
   @user "jane.doe"
   @pw   "password"
 
