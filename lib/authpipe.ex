@@ -125,6 +125,12 @@ defmodule AuthPipe do
     end
   end
 
-  def filter_required({stage, _module, %{required: true, implicit: false}}, acc), do: [Atom.to_string(stage)|acc]
-  def filter_required(_, acc), do: acc
+  def filter_required({stage, _module, opts}, acc) do
+    with true  <- Map.get(opts, :required, true),
+         false <- Map.get(opts, :implicit, false) do
+      [Atom.to_string(stage)|acc]
+    else
+      _ -> acc
+    end
+  end
 end
