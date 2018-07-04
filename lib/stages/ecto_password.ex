@@ -1,21 +1,12 @@
-defmodule AuthPipe.Stage.EctoPassword.Schema do
-  use Ecto.Schema
-
-  @primary_key false
-  schema "authpipe_stage_ectopassword" do
-    field :user, :string, primary_key: true
-    field :password, :string
-    field :active, :boolean, default: false
-  end
-end
-
 defmodule AuthPipe.Stage.EctoPassword do
+  @moduledoc false
+
   use AuthPipe.Stage
 
   import Ecto.Query, only: [from: 2]
   import Ecto.Changeset
 
-  alias Comeonin.Bcrypt
+  alias Comeonin.Argon2, as: PwHasher
 
   @password_table_name "authpipe_stage_ectopassword"
 
@@ -27,7 +18,7 @@ defmodule AuthPipe.Stage.EctoPassword do
 
     case repo.one(query) do
       nil -> {:fail, :no_such_user, auth_state}
-      hashed_password -> password_matches?(Bcrypt.checkpw(password, hashed_password),
+      hashed_password -> password_matches?(PwHasher.checkpw(password, hashed_password),
                                              auth_state)
     end
   end
@@ -43,7 +34,7 @@ defmodule AuthPipe.Stage.EctoPassword do
     account_info =
     case Map.get account_info, "password" do
       nil -> account_info
-      value -> Map.put account_info, "password", Bcrypt.hashpwsalt value
+      value -> Map.put account_info, "password", PwHasher.hashpwsalt value
     end
 
     %AuthPipe.Stage.EctoPassword.Schema{}

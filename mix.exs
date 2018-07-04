@@ -16,25 +16,25 @@ defmodule Authpipe.Mixfile do
 
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Authpipe.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
   defp deps do
     [
       # core deps
-      {:poison, "~> 3.1.0"},
 
       # stage deps
-      {:ecto, "~> 2.1.4"},
-      {:comeonin, "~>2.1.0"},
+      {:ecto, "~> 2.2.10"},
+      {:comeonin, "~>4.1.1"},
+      {:argon2_elixir, "~> 1.3"},
 
       # development deps
       {:remix, "~> 0.0.2", only: :dev},
-      {:credo, "~> 0.8.1", only: [:dev, :test]},
+      {:credo, "~> 0.9.3", only: [:dev, :test]},
       {:dialyxir, "~> 0.5", only: [:test], runtime: false},
-      {:coverex, "== 1.4.13", only: :test}
+      {:coverex, "~> 1.4.15", only: :test},
+      {:jason, "~> 1.1.0", only: :test},
     ]
   end
 

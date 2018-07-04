@@ -47,7 +47,7 @@ defmodule AuthpipeTest do
   defp get_client_data(path) do
     {:ok, data} =
     File.read!(path)
-    |> Poison.decode
+    |> Jason.decode
 
     data
   end

@@ -25,11 +25,9 @@ defmodule AuthPipe do
     # memoize the stages that are requred to be supported by the client
     required_stages = Enum.reduce(stages, [], &AuthPipe.filter_required/2)
 
-    Logger.debug "Stages: #{inspect stages}, required: #{inspect required_stages}"
+    Logger.debug(fn -> "Stages: #{inspect stages}, required: #{inspect required_stages}" end)
 
     quote do
-      def sigil_l(string, _), do: string
-
       defp __authpipe_approve_initialization(%{"init" => %{"methods" => supported_mechanisms}} = client_data)
         when is_list(supported_mechanisms) do
         __authpipe_approve_initialization_with(supported_mechanisms, client_data)
@@ -70,20 +68,20 @@ defmodule AuthPipe do
       end
 
       def authenticate(client_data, {:authorized, state}) do
-        Logger.debug "The user is authorized"
-        Enum.each unquote(Macro.escape(stages)),
-                  fn {_name, module, opts} -> module.authenticated(state, opts) end
+        Logger.debug(fn -> "The user is authorized" end)
+        Enum.each(unquote(Macro.escape(stages)),
+                  fn {_name, module, opts} -> module.authenticated(state, opts) end)
         :authorized
       end
 
       def authenticate(client_data, {:fail, reason, _state}) do
         # TODO: should be an opportunity for Stages to react to failure
-        Logger.warn ~l"Authorization has FAILED #{inspect reason}"
+        Logger.warn(fn -> "Authorization has FAILED #{inspect reason}" end)
         {:fail, reason}
       end
 
       def authenticate(client_data, {:new_challenge, client_message, _state}) do
-        Logger.debug ~l"A request for a new challenge has been received! #{inspect client_message}"
+        Logger.debug(fn -> "A request for a new challenge has been received! #{inspect client_message}" end)
         :more
         ## TODO: must send this to the client via the adapter
       end
@@ -93,7 +91,7 @@ defmodule AuthPipe do
       end
 
       def authenticate(client_data, unexpected_resp) do
-        Logger.debug ~l"Authorization error due to unknown response type: #{inspect unexpected_resp}"
+        Logger.debug(fn -> "Authorization error due to unknown response type: #{inspect unexpected_resp}" end)
         {:fail, "Unexpected response from stage"}
       end
     end
